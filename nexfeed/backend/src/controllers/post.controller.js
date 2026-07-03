@@ -6,8 +6,12 @@ exports.createPost = async (req, res) => {
     const { content, image_url } = req.body;
     const userId = req.user.id;
 
-    if (!content) {
+    if (!content || !content.trim()) {
       return res.status(400).json({ message: 'Content is required' });
+    }
+
+    if (content.length > 500) {
+      return res.status(400).json({ message: 'Content exceeds 500 character limit' });
     }
 
     const hashtags = content.match(/#\w+/g) || [];
@@ -16,7 +20,7 @@ exports.createPost = async (req, res) => {
       `INSERT INTO posts (user_id, content, image_url, hashtags)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [userId, content, image_url, hashtags]
+      [userId, content, image_url, hashtags.length > 0 ? hashtags : null]
     );
 
     await pool.query(
@@ -128,7 +132,7 @@ exports.addComment = async (req, res) => {
     const { content } = req.body;
     const userId = req.user.id;
 
-    if (!content) {
+    if (!content || !content.trim()) {
       return res.status(400).json({ message: 'Content is required' });
     }
 

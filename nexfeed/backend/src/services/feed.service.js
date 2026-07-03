@@ -29,7 +29,7 @@ exports.rankFeedWithAI = async (userId, posts) => {
       content: p.content.substring(0, 200),
       likes: p.likes_count,
       comments: p.comments_count,
-      hashtags: p.hashtags,
+      hashtags: p.hashtags || [],
       age_hours: Math.floor(
         (Date.now() - new Date(p.created_at)) / 3600000
       )

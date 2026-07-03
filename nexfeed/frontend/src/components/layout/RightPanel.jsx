@@ -7,11 +7,11 @@ export default function RightPanel() {
   const [trending, setTrending] = useState([]);
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState('');
+  const [loadingUsers, setLoadingUsers] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchTrending();
-    fetchSuggestions();
   }, []);
 
   const fetchTrending = async () => {
@@ -23,25 +23,22 @@ export default function RightPanel() {
     }
   };
 
-  const fetchSuggestions = async () => {
-    try {
-      const { data } = await api.get('/users/search?q=');
-      setUsers(data.slice(0, 4));
-    } catch {
-      // silently ignore
-    }
-  };
-
   const handleSearch = async (e) => {
     const val = e.target.value;
     setSearch(val);
+    
     if (val.length > 1) {
+      setLoadingUsers(true);
       try {
-        const { data } = await api.get(`/users/search?q=${val}`);
+        const { data } = await api.get(`/users/search?q=${encodeURIComponent(val)}`);
         setUsers(data);
       } catch {
-        // silently ignore
+        setUsers([]);
+      } finally {
+        setLoadingUsers(false);
       }
+    } else {
+      setUsers([]);
     }
   };
 
@@ -75,24 +72,32 @@ export default function RightPanel() {
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold text-white mb-3">Who to Follow</h3>
+        <h3 className="text-sm font-semibold text-white mb-3">
+          {search.length > 1 ? 'Search Results' : 'Who to Follow'}
+        </h3>
         <div className="space-y-3">
-          {users.map((u) => (
-            <div
-              key={u.id}
-              onClick={() => navigate(`/profile/${u.username}`)}
-              className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 cursor-pointer transition"
-            >
-              <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
-                {u.name?.[0]?.toUpperCase()}
+          {loadingUsers ? (
+            <p className="text-xs text-gray-600 px-3">Searching...</p>
+          ) : users.length > 0 ? (
+            users.map((u) => (
+              <div
+                key={u.id}
+                onClick={() => navigate(`/profile/${u.username}`)}
+                className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 cursor-pointer transition"
+              >
+                <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                  {u.name?.[0]?.toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white truncate">{u.name}</p>
+                  <p className="text-xs text-gray-500">@{u.username}</p>
+                </div>
+                <span className="text-xs text-indigo-400 font-medium">Follow</span>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{u.name}</p>
-                <p className="text-xs text-gray-500">@{u.username}</p>
-              </div>
-              <span className="text-xs text-indigo-400 font-medium">Follow</span>
-            </div>
-          ))}
+            ))
+          ) : search.length > 1 ? (
+            <p className="text-xs text-gray-600 px-3">No users found</p>
+          ) : null}
         </div>
       </div>
     </aside>

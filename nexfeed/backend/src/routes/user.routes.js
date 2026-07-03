@@ -4,9 +4,9 @@ const { getProfile, getUserPosts, toggleFollow, updateProfile, searchUsers } = r
 const auth = require('../middleware/auth.middleware');
 
 router.get('/search', auth, searchUsers);
+router.put('/profile/update', auth, updateProfile);
 router.get('/:username', auth, getProfile);
 router.get('/:username/posts', auth, getUserPosts);
 router.post('/:id/follow', auth, toggleFollow);
-router.put('/profile/update', auth, updateProfile);
 
 module.exports = router;
